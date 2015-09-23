@@ -25,7 +25,14 @@ namespace Spektr
         MaterialProperty _emissionColor;
         MaterialProperty _emissionMap;
 
-        MaterialProperty _transition;
+        MaterialProperty _transitionAxis;
+        MaterialProperty _transitionBase;
+        MaterialProperty _transitionSpeed;
+        MaterialProperty _transitionTime;
+
+        MaterialProperty _backColor;
+        MaterialProperty _backGlossiness;
+        MaterialProperty _backMetallic;
 
         static GUIContent _albedoText     = new GUIContent("Albedo");
         static GUIContent _metallicText   = new GUIContent("Metallic");
@@ -56,7 +63,14 @@ namespace Spektr
             _emissionColor = FindProperty("_EmissionColor", props);
             _emissionMap   = FindProperty("_EmissionMap", props);
 
-            _transition = FindProperty("_Transition", props);
+            _backColor      = FindProperty("_BackColor", props);
+            _backGlossiness = FindProperty("_BackGlossiness", props);
+            _backMetallic   = FindProperty("_BackMetallic", props);
+
+            _transitionAxis  = FindProperty("_TransitionAxis", props);
+            _transitionBase  = FindProperty("_TransitionBase", props);
+            _transitionSpeed = FindProperty("_TransitionSpeed", props);
+            _transitionTime  = FindProperty("_TransitionTime", props);
         }
 
         public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
@@ -100,8 +114,20 @@ namespace Spektr
 
             EditorGUILayout.Space();
 
+            // backface properties
+            EditorGUILayout.LabelField("Backface Properties");
+            materialEditor.ShaderProperty(_backColor, "Color");
+            materialEditor.ShaderProperty(_backMetallic, "Matallic");
+            materialEditor.ShaderProperty(_backGlossiness, "Smoothness");
+
+            EditorGUILayout.Space();
+
             // scatter effect parameters
-            materialEditor.ShaderProperty(_transition, "Transition");
+            EditorGUILayout.LabelField("Transition");
+            materialEditor.ShaderProperty(_transitionAxis, "Axis");
+            materialEditor.ShaderProperty(_transitionBase, "Base Position");
+            materialEditor.ShaderProperty(_transitionSpeed, "Speed");
+            materialEditor.ShaderProperty(_transitionTime, "Time");
 
             return EditorGUI.EndChangeCheck();
         }
