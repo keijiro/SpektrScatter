@@ -1,10 +1,23 @@
-﻿using UnityEngine;
+﻿//
+// Scatter - polygon scattering effect
+//
+using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Kvant
+namespace Spektr
 {
+    //
+    // Custom model postprocessor
+    //
+    // It splits up all the consolidated vertices so that each triangle
+    // consists of individual vertices. It also embeds the centroid of each
+    // triangle into UV1.
+    //
+    // This postprocessor is applied only to models with the suffix
+    // "scatterable" (case-insensitive).
+    //
     public class ScatterModelPostprocessor : AssetPostprocessor
     {
         void OnPostprocessModel(GameObject go)

@@ -1,4 +1,7 @@
-﻿Shader "Kvant/Scatter"
+﻿//
+// Scatter - polygon scattering effect
+//
+Shader "Spektr/Scatter/Standard"
 {
     Properties
     {
@@ -15,16 +18,16 @@
         _OcclusionStrength("Strength", Range(0.0, 1.0)) = 1.0
         _OcclusionMap("Occlusion", 2D) = "white" {}
 
-        _EmissionColor("Color", Color) = (0,0,0)
+        _EmissionColor("Color", Color) = (0, 0, 0)
         _EmissionMap("Emission", 2D) = "white" {}
 
         _Transition("Transition", Float) = 0
     }
     SubShader
     {
-        Cull off
-
         Tags { "RenderType"="Opaque" }
+
+        Cull off
 
         CGPROGRAM
 
@@ -158,4 +161,5 @@
         ENDCG
     }
     FallBack "Diffuse"
+    CustomEditor "Spektr.ScatterStandardMaterialEditor"
 }
