@@ -25,13 +25,6 @@ namespace Spektr
         MaterialProperty _emissionColor;
         MaterialProperty _emissionMap;
 
-        MaterialProperty _transitionBase;
-        MaterialProperty _transitionSpeed;
-        MaterialProperty _transitionTime;
-
-        MaterialProperty _transitionAxisPitch;
-        MaterialProperty _transitionAxisYaw;
-
         MaterialProperty _backColor;
         MaterialProperty _backGlossiness;
         MaterialProperty _backMetallic;
@@ -68,13 +61,6 @@ namespace Spektr
             _backColor      = FindProperty("_BackColor", props);
             _backGlossiness = FindProperty("_BackGlossiness", props);
             _backMetallic   = FindProperty("_BackMetallic", props);
-
-            _transitionAxisYaw   = FindProperty("_TransitionAxisYaw", props);
-            _transitionAxisPitch = FindProperty("_TransitionAxisPitch", props);
-
-            _transitionBase  = FindProperty("_TransitionBase", props);
-            _transitionSpeed = FindProperty("_TransitionSpeed", props);
-            _transitionTime  = FindProperty("_TransitionTime", props);
         }
 
         public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
@@ -91,6 +77,10 @@ namespace Spektr
         bool ShaderPropertiesGUI(MaterialEditor materialEditor)
         {
             EditorGUI.BeginChangeCheck();
+
+            EditorGUILayout.LabelField("Front-face properties", EditorStyles.boldLabel);
+
+            EditorGUILayout.Space();
 
             // albedo
             materialEditor.TexturePropertySingleLine(_albedoText, _mainTex, _color);
@@ -119,21 +109,13 @@ namespace Spektr
             EditorGUILayout.Space();
 
             // backface properties
-            EditorGUILayout.LabelField("Backface Properties");
-            materialEditor.ShaderProperty(_backColor, "Color");
-            materialEditor.ShaderProperty(_backMetallic, "Matallic");
-            materialEditor.ShaderProperty(_backGlossiness, "Smoothness");
+            EditorGUILayout.LabelField("Back-face properties", EditorStyles.boldLabel);
 
             EditorGUILayout.Space();
 
-            // scatter effect parameters
-            EditorGUILayout.LabelField("Transition");
-            //materialEditor.ShaderProperty(_transitionAxis, "Axis");
-            materialEditor.ShaderProperty(_transitionAxisYaw, "Axis Yaw");
-            materialEditor.ShaderProperty(_transitionAxisPitch, "Axis Pitch");
-            materialEditor.ShaderProperty(_transitionBase, "Base Position");
-            materialEditor.ShaderProperty(_transitionSpeed, "Speed");
-            materialEditor.ShaderProperty(_transitionTime, "Time");
+            materialEditor.ShaderProperty(_backColor, "Color");
+            materialEditor.ShaderProperty(_backMetallic, "Matallic");
+            materialEditor.ShaderProperty(_backGlossiness, "Smoothness");
 
             return EditorGUI.EndChangeCheck();
         }
@@ -146,15 +128,6 @@ namespace Spektr
 
             var emissive = material.GetColor("_EmissionColor").maxColorComponent > 0.1f / 255;
             SetKeyword(material, "_EMISSION", emissive);
-
-            var yaw = material.GetFloat("_TransitionAxisYaw") * Mathf.Deg2Rad;
-            var pitch = material.GetFloat("_TransitionAxisPitch") * Mathf.Deg2Rad;
-
-            var ax = Mathf.Cos(pitch) * Mathf.Cos(yaw);
-            var ay = Mathf.Sin(pitch);
-            var az = Mathf.Cos(pitch) * -Mathf.Sin(yaw);
-
-            material.SetVector("_TransitionAxis", new Vector3(ax, ay, az));
         }
 
         static void SetKeyword(Material m, string keyword, bool state)

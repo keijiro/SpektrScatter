@@ -24,25 +24,6 @@ Shader "Spektr/Scatter/Standard"
         _BackColor("", Color) = (1, 1, 1, 1)
         _BackGlossiness("", Range(0.0, 1.0)) = 0.5
         [Gamma] _BackMetallic("", Range(0.0, 1.0)) = 0.0
-
-        _TransitionAxisYaw ("", Range(-180, 180)) = 0
-        _TransitionAxisPitch ("", Range(-90, 90)) = 90
-        _TransitionAxis("", Vector) = (0, 1, 0)
-
-        _TransitionBase("", float) = 0
-        _TransitionSpeed("", float) = 1
-        _TransitionTime("", float) = 0
-
-        _DecayRate("", float) = 0.3
-        _Inflation("", float) = 3.5
-
-        _PosNoiseFreq("", float) = 5
-        _PosNoiseSpeed("", float) = 2
-        _PosNoiseAmp("", float) = 0.04
-
-        _RotNoiseFreq("", float) = 2
-        _RotNoiseSpeed("", float) = 1.2
-        _RotNoiseAmp("", float) = 4
     }
 
     CGINCLUDE
@@ -69,21 +50,12 @@ Shader "Spektr/Scatter/Standard"
     half _BackGlossiness;
     half _BackMetallic;
 
-    float3 _TransitionAxis;
-    float _TransitionBase;
-    float _TransitionSpeed;
-    float _TransitionTime;
+    float4 _EffectorAxis;
+    float3 _EffectorSize;
 
-    float _DecayRate;
+    float3 _PNoise;
+    float3 _RNoise;
     float _Inflation;
-
-    float _PosNoiseFreq;
-    float _PosNoiseSpeed;
-    float _PosNoiseAmp;
-
-    float _RotNoiseFreq;
-    float _RotNoiseSpeed;
-    float _RotNoiseAmp;
 
     struct Input
     {
@@ -108,9 +80,9 @@ Shader "Spektr/Scatter/Standard"
         );
     }
 
-    // Uniformaly distributed points
+    // Uniformaly distributed points on a unit sphere
     // http://mathworld.wolfram.com/SpherePointPicking.html
-    float3 random_axis(float2 uv)
+    float3 random_point_on_sphere(float2 uv)
     {
         float u = nrand(uv, 0) * 2 - 1;
         float theta = nrand(uv, 1) * UNITY_PI * 2;
@@ -126,6 +98,7 @@ Shader "Spektr/Scatter/Standard"
         return qmul(r, qmul(float4(v, 0), r_c)).xyz;
     }
 
+    // A given angle of rotation about a given aixs
     float4 rotation_angle_axis(float angle, float3 axis)
     {
         float sn, cs;
@@ -138,52 +111,51 @@ Shader "Spektr/Scatter/Standard"
         UNITY_INITIALIZE_OUTPUT(Input, data);
 
         // position of centroid
-        float3 p_c = v.texcoord1.xyz;
+        float3 center = v.texcoord1.xyz;
 
-        // time parameter
-        float t_c = _TransitionBase - dot(p_c, _TransitionAxis);
-        t_c /= _TransitionSpeed;
-        t_c += _TransitionTime;
+        // transition parameter at centroid
+        float trans = _EffectorAxis.w - dot(center, _EffectorAxis.xyz);
+        trans = trans / _EffectorSize.y + 0.5;
 
-        // used for filtering out minus time
-        float t_mask = t_c > 0.0;
+        // unit step function
+        float unit = trans > 0.0;
 
-        // we want positive t
-        t_c = max(t_c, 0.0);
+        // decay parameter
+        float decay = saturate(1.0 - trans) * unit;
 
-        // global decay parameter
-        float decay = saturate(1.0 - t_c * _DecayRate) * t_mask;
+        // displacement
+        float3 pnoise = center * _PNoise.x + float3(18.4, 28.1, 21.4);
+        pnoise += _EffectorAxis.xyz * _PNoise.y * _Time.y;
 
-        // translation
-        float3 move_dir = random_axis(p_c.xy);
-        float3 pos_noise = p_c * _PosNoiseFreq + float3(18.4, 28.1, 21.4);
-        pos_noise += _TransitionAxis * t_c * _PosNoiseSpeed;
-        float move_dist = cnoise(pos_noise) * _PosNoiseAmp;
+        float3 displace = random_point_on_sphere(center.xy);
+        displace *= cnoise(pnoise) * _PNoise.z * decay;
 
         // rotation
-        float3 rot_noise = p_c * _RotNoiseFreq + float3(23.1, 38.4, 15.3);
-        rot_noise += _TransitionAxis * t_c * _RotNoiseSpeed;
-        float angle = cnoise(rot_noise) * _RotNoiseAmp;
-        float3 axis = normalize(cross(_TransitionAxis, p_c));
-        float4 rotation = rotation_angle_axis(angle * decay, axis);
+        float3 rnoise = center * _RNoise.x + float3(23.1, 38.4, 15.3);
+        rnoise += _EffectorAxis.xyz * _RNoise.y * _Time.y;
+
+        float3 raxis = normalize(cross(_EffectorAxis.xyz, center));
+        float rangle = cnoise(rnoise) * _RNoise.z * decay;
+
+        float4 rotation = rotation_angle_axis(rangle, raxis);
 
         // scaling
-        float scale = lerp(1.0, _Inflation * decay, t_mask);
+        float scale = 1.0 + lerp(-1, _Inflation - 1, decay) * unit;
 
         // apply transform in triangle-local space
-        float3 p_v = v.vertex.xyz - p_c;
+        float3 p_v = v.vertex.xyz - center;
 
         p_v = rotate_vector(p_v, rotation);
-        p_v += move_dir * move_dist * decay;
+        p_v += displace;
         p_v *= scale;
 
-        v.vertex.xyz = p_v + p_c;
+        v.vertex.xyz = p_v + center;
 
-        // rotate normal
+        // rotate normal vector
         v.normal = rotate_vector(v.normal, rotation) * flipNormal;
 
         // emission
-        data.emission = saturate(1.0 - t_c) * t_mask;
+        data.emission = pow(decay, 8);
     }
 
     ENDCG
@@ -245,10 +217,6 @@ Shader "Spektr/Scatter/Standard"
 
         #pragma surface surf Standard vertex:vert nolightmap addshadow
         #pragma target 3.0
-
-        #pragma shader_feature _METALLICGLOSSMAP
-        #pragma shader_feature _NORMALMAP
-        #pragma shader_feature _EMISSION
 
         void vert(inout appdata_full v, out Input data)
         {
