@@ -38,7 +38,7 @@ Material:
           m_Offset: {x: 0, y: 0}
       data:
         first:
-          name: _MetallicGlossMap
+          name: _ParallaxMap
         second:
           m_Texture: {fileID: 0}
           m_Scale: {x: 1, y: 1}
@@ -59,13 +59,6 @@ Material:
           m_Offset: {x: 0, y: 0}
       data:
         first:
-          name: _ParallaxMap
-        second:
-          m_Texture: {fileID: 0}
-          m_Scale: {x: 1, y: 1}
-          m_Offset: {x: 0, y: 0}
-      data:
-        first:
           name: _DetailMask
         second:
           m_Texture: {fileID: 0}
@@ -74,6 +67,13 @@ Material:
       data:
         first:
           name: _DetailAlbedoMap
+        second:
+          m_Texture: {fileID: 0}
+          m_Scale: {x: 1, y: 1}
+          m_Offset: {x: 0, y: 0}
+      data:
+        first:
+          name: _MetallicGlossMap
         second:
           m_Texture: {fileID: 0}
           m_Scale: {x: 1, y: 1}
@@ -93,12 +93,16 @@ Material:
         second: .5
       data:
         first:
-          name: _Glossiness
-        second: .400000006
+          name: _Parallax
+        second: .0199999996
       data:
         first:
-          name: _Metallic
-        second: 0
+          name: _ZWrite
+        second: 1
+      data:
+        first:
+          name: _Glossiness
+        second: .400000006
       data:
         first:
           name: _BumpScale
@@ -107,6 +111,26 @@ Material:
         first:
           name: _OcclusionStrength
         second: 1
+      data:
+        first:
+          name: _DetailNormalMapScale
+        second: 1
+      data:
+        first:
+          name: _UVSec
+        second: 0
+      data:
+        first:
+          name: _Mode
+        second: 0
+      data:
+        first:
+          name: _Metallic
+        second: 0
+      data:
+        first:
+          name: _Transition
+        second: 11.5299997
       data:
         first:
           name: _BackGlossiness
@@ -126,31 +150,7 @@ Material:
       data:
         first:
           name: _TransitionTime
-        second: 0
-      data:
-        first:
-          name: _Parallax
-        second: .0199999996
-      data:
-        first:
-          name: _ZWrite
-        second: 1
-      data:
-        first:
-          name: _DetailNormalMapScale
-        second: 1
-      data:
-        first:
-          name: _UVSec
-        second: 0
-      data:
-        first:
-          name: _Mode
-        second: 0
-      data:
-        first:
-          name: _Transition
-        second: 11.5299997
+        second: .170000002
       data:
         first:
           name: _TransitionEnd
@@ -162,6 +162,50 @@ Material:
       data:
         first:
           name: _TransitionTim
+        second: 0
+      data:
+        first:
+          name: _DecayRate
+        second: .100000001
+      data:
+        first:
+          name: _PosNoiseFreq
+        second: 5
+      data:
+        first:
+          name: _PosNoiseSpeed
+        second: 2
+      data:
+        first:
+          name: _PosNoiseAmp
+        second: .0399999991
+      data:
+        first:
+          name: _RotNoiseFreq
+        second: 2
+      data:
+        first:
+          name: _RotNoiseSpeed
+        second: 1.20000005
+      data:
+        first:
+          name: _RotNoiseAmp
+        second: 4
+      data:
+        first:
+          name: _Inflation
+        second: 3.5
+      data:
+        first:
+          name: _DecayRate2
+        second: .300000012
+      data:
+        first:
+          name: _TransitionAxisPitch
+        second: 90
+      data:
+        first:
+          name: _TransitionAxisYaw
         second: 0
     m_Colors:
       data:
@@ -179,4 +223,4 @@ Material:
       data:
         first:
           name: _TransitionAxis
-        second: {r: 0, g: 1, b: 0, a: 1}
+        second: {r: -4.37113883e-08, g: 1, b: 0, a: 0}

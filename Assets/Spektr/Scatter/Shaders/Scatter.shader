@@ -5,30 +5,44 @@ Shader "Spektr/Scatter/Standard"
 {
     Properties
     {
-        _Color("Color", Color) = (1, 1, 1, 1)
-        _MainTex("Albedo", 2D) = "white" {}
+        _Color("", Color) = (1, 1, 1, 1)
+        _MainTex("", 2D) = "white" {}
 
-        _Glossiness("Smoothness", Range(0.0, 1.0)) = 0.5
-        [Gamma] _Metallic("Metallic", Range(0.0, 1.0)) = 0.0
-        _MetallicGlossMap("Metallic", 2D) = "white" {}
+        _Glossiness("", Range(0.0, 1.0)) = 0.5
+        [Gamma] _Metallic("", Range(0.0, 1.0)) = 0.0
+        _MetallicGlossMap("", 2D) = "white" {}
 
-        _BumpScale("Scale", Range(0.0, 2.0)) = 1.0
-        _BumpMap("Normal Map", 2D) = "bump" {}
+        _BumpScale("", Range(0.0, 2.0)) = 1.0
+        _BumpMap("", 2D) = "bump" {}
 
-        _OcclusionStrength("Strength", Range(0.0, 1.0)) = 1.0
-        _OcclusionMap("Occlusion", 2D) = "white" {}
+        _OcclusionStrength("", Range(0.0, 1.0)) = 1.0
+        _OcclusionMap("", 2D) = "white" {}
 
-        _EmissionColor("Color", Color) = (0, 0, 0)
-        _EmissionMap("Emission", 2D) = "white" {}
+        _EmissionColor("", Color) = (0, 0, 0)
+        _EmissionMap("", 2D) = "white" {}
 
-        _BackColor("Back Color", Color) = (1, 1, 1, 1)
-        _BackGlossiness("Back Smoothness", Range(0.0, 1.0)) = 0.5
-        [Gamma] _BackMetallic("Back Metallic", Range(0.0, 1.0)) = 0.0
+        _BackColor("", Color) = (1, 1, 1, 1)
+        _BackGlossiness("", Range(0.0, 1.0)) = 0.5
+        [Gamma] _BackMetallic("", Range(0.0, 1.0)) = 0.0
 
-        _TransitionAxis("Transition Axis", Vector) = (0, 1, 0)
-        _TransitionBase("Transition Base", float) = 0
-        _TransitionSpeed("Transition Speed", float) = 1
-        _TransitionTime("Transition Time", float) = 0
+        _TransitionAxisYaw ("", Range(-180, 180)) = 0
+        _TransitionAxisPitch ("", Range(-90, 90)) = 90
+        _TransitionAxis("", Vector) = (0, 1, 0)
+
+        _TransitionBase("", float) = 0
+        _TransitionSpeed("", float) = 1
+        _TransitionTime("", float) = 0
+
+        _DecayRate("", float) = 0.3
+        _Inflation("", float) = 3.5
+
+        _PosNoiseFreq("", float) = 5
+        _PosNoiseSpeed("", float) = 2
+        _PosNoiseAmp("", float) = 0.04
+
+        _RotNoiseFreq("", float) = 2
+        _RotNoiseSpeed("", float) = 1.2
+        _RotNoiseAmp("", float) = 4
     }
 
     CGINCLUDE
@@ -59,6 +73,17 @@ Shader "Spektr/Scatter/Standard"
     float _TransitionBase;
     float _TransitionSpeed;
     float _TransitionTime;
+
+    float _DecayRate;
+    float _Inflation;
+
+    float _PosNoiseFreq;
+    float _PosNoiseSpeed;
+    float _PosNoiseAmp;
+
+    float _RotNoiseFreq;
+    float _RotNoiseSpeed;
+    float _RotNoiseAmp;
 
     struct Input
     {
@@ -120,38 +145,45 @@ Shader "Spektr/Scatter/Standard"
         t_c /= _TransitionSpeed;
         t_c += _TransitionTime;
 
-        // emission
-        data.emission = (1.0 - saturate(t_c)) * (t_c > 0.0);
+        // used for filtering out minus time
+        float t_mask = t_c > 0.0;
 
+        // we want positive t
         t_c = max(t_c, 0.0);
-        t_c *= 0.99;
 
-        float itc = (1.0 - saturate(t_c * 0.3)) * (t_c > 0.0);
+        // global decay parameter
+        float decay = saturate(1.0 - t_c * _DecayRate) * t_mask;
 
         // translation
-        float3 move = random_axis(p_c.xy) * 0.04 * cnoise(p_c * 5 + float3(33, t_c * 2, 21.4)) * (t_c > 0.0);
-        move *= itc;
+        float3 move_dir = random_axis(p_c.xy);
+        float3 pos_noise = p_c * _PosNoiseFreq + float3(18.4, 28.1, 21.4);
+        pos_noise += _TransitionAxis * t_c * _PosNoiseSpeed;
+        float move_dist = cnoise(pos_noise) * _PosNoiseAmp;
 
         // rotation
-        float r_a = cnoise(p_c * 2 + float3(0, t_c * 1.2, 0)) * 4;
-        r_a *= itc;
-        //float4 rotation = rotation_angle_axis(r_a, random_axis(p_c.xy));
-        float4 rotation = rotation_angle_axis(r_a, float3(1, 0, 0));
+        float3 rot_noise = p_c * _RotNoiseFreq + float3(23.1, 38.4, 15.3);
+        rot_noise += _TransitionAxis * t_c * _RotNoiseSpeed;
+        float angle = cnoise(rot_noise) * _RotNoiseAmp;
+        float3 axis = normalize(cross(_TransitionAxis, p_c));
+        float4 rotation = rotation_angle_axis(angle * decay, axis);
 
         // scaling
-        //float scale = 1.0 + sin(min(t_c * 2.4, UNITY_PI * 1.5)) * max(2.0 - 2.0 * t_c * 2.4 / (UNITY_PI * 1.5), 1.0);
-        float scale = 1.0 + lerp(-1.0, 2.5, itc) * (t_c > 0.0);
+        float scale = lerp(1.0, _Inflation * decay, t_mask);
 
         // apply transform in triangle-local space
         float3 p_v = v.vertex.xyz - p_c;
+
         p_v = rotate_vector(p_v, rotation);
-        p_v += move;
+        p_v += move_dir * move_dist * decay;
         p_v *= scale;
+
         v.vertex.xyz = p_v + p_c;
 
         // rotate normal
         v.normal = rotate_vector(v.normal, rotation) * flipNormal;
 
+        // emission
+        data.emission = saturate(1.0 - t_c) * t_mask;
     }
 
     ENDCG
@@ -202,8 +234,7 @@ Shader "Spektr/Scatter/Standard"
             o.Emission = e * _EmissionColor.rgb;
             #endif
 
-            //o.Emission += saturate(1 - abs(IN.emission)) * 8;
-            o.Emission += abs(IN.emission);
+            o.Emission += IN.emission;
         }
 
         ENDCG
@@ -230,7 +261,7 @@ Shader "Spektr/Scatter/Standard"
             o.Alpha = _BackColor.a;
             o.Metallic = _BackMetallic;
             o.Smoothness = _BackGlossiness;
-            o.Emission = abs(IN.emission);
+            o.Emission = IN.emission;
         }
 
         ENDCG

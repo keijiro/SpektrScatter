@@ -25,10 +25,12 @@ namespace Spektr
         MaterialProperty _emissionColor;
         MaterialProperty _emissionMap;
 
-        MaterialProperty _transitionAxis;
         MaterialProperty _transitionBase;
         MaterialProperty _transitionSpeed;
         MaterialProperty _transitionTime;
+
+        MaterialProperty _transitionAxisPitch;
+        MaterialProperty _transitionAxisYaw;
 
         MaterialProperty _backColor;
         MaterialProperty _backGlossiness;
@@ -67,7 +69,9 @@ namespace Spektr
             _backGlossiness = FindProperty("_BackGlossiness", props);
             _backMetallic   = FindProperty("_BackMetallic", props);
 
-            _transitionAxis  = FindProperty("_TransitionAxis", props);
+            _transitionAxisYaw   = FindProperty("_TransitionAxisYaw", props);
+            _transitionAxisPitch = FindProperty("_TransitionAxisPitch", props);
+
             _transitionBase  = FindProperty("_TransitionBase", props);
             _transitionSpeed = FindProperty("_TransitionSpeed", props);
             _transitionTime  = FindProperty("_TransitionTime", props);
@@ -124,7 +128,9 @@ namespace Spektr
 
             // scatter effect parameters
             EditorGUILayout.LabelField("Transition");
-            materialEditor.ShaderProperty(_transitionAxis, "Axis");
+            //materialEditor.ShaderProperty(_transitionAxis, "Axis");
+            materialEditor.ShaderProperty(_transitionAxisYaw, "Axis Yaw");
+            materialEditor.ShaderProperty(_transitionAxisPitch, "Axis Pitch");
             materialEditor.ShaderProperty(_transitionBase, "Base Position");
             materialEditor.ShaderProperty(_transitionSpeed, "Speed");
             materialEditor.ShaderProperty(_transitionTime, "Time");
@@ -140,6 +146,15 @@ namespace Spektr
 
             var emissive = material.GetColor("_EmissionColor").maxColorComponent > 0.1f / 255;
             SetKeyword(material, "_EMISSION", emissive);
+
+            var yaw = material.GetFloat("_TransitionAxisYaw") * Mathf.Deg2Rad;
+            var pitch = material.GetFloat("_TransitionAxisPitch") * Mathf.Deg2Rad;
+
+            var ax = Mathf.Cos(pitch) * Mathf.Cos(yaw);
+            var ay = Mathf.Sin(pitch);
+            var az = Mathf.Cos(pitch) * -Mathf.Sin(yaw);
+
+            material.SetVector("_TransitionAxis", new Vector3(ax, ay, az));
         }
 
         static void SetKeyword(Material m, string keyword, bool state)
