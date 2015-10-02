@@ -46,11 +46,18 @@ namespace Spektr
 
         public override void OnInspectorGUI()
         {
+            var instance = (ScatterRenderer)target;
+
             serializedObject.Update();
 
             EditorGUILayout.PropertyField(_effector);
+
+            EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(_mesh);
             EditorGUILayout.PropertyField(_materials, true);
+            if (EditorGUI.EndChangeCheck())
+                instance.DisposeInternalObjects();
+
             EditorGUILayout.PropertyField(_castShadows);
             EditorGUILayout.PropertyField(_receiveShadows);
 

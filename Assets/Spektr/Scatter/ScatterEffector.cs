@@ -21,11 +21,12 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Spektr
 {
     [ExecuteInEditMode]
-    [AddComponentMenu("Spektr/Scatter/Effector")]
+    [AddComponentMenu("Spektr/Scatter Effector")]
     public class ScatterEffector : MonoBehaviour
     {
         #region Effector Properties

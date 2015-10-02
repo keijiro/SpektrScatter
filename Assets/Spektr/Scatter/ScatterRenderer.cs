@@ -26,19 +26,34 @@ using UnityEngine.Rendering;
 namespace Spektr
 {
     [ExecuteInEditMode]
-    [AddComponentMenu("Spektr/Scatter/Renderer")]
+    [AddComponentMenu("Spektr/Scatter Renderer")]
     public class ScatterRenderer : MonoBehaviour
     {
-        #region Public Properties
+        #region Public Properties And Functions
 
         [SerializeField]
         ScatterEffector _effector;
 
+        public ScatterEffector effector {
+            get { return _effector; }
+            set { _effector = value; }
+        }
+
         [SerializeField]
         Mesh _mesh;
 
+        public Mesh mesh {
+            get { return _ownMesh != null ? _ownMesh : _mesh; }
+            set { ClearOwnMesh(); _mesh = value; }
+        }
+
         [SerializeField]
         Material[] _materials = new Material[1];
+
+        public Material[] materials {
+            get { return _ownMaterials != null ? _ownMaterials : _materials; }
+            set { ClearOwnMaterials(); _materials = value; }
+        }
 
         [SerializeField]
         ShadowCastingMode _castShadows;
@@ -56,32 +71,126 @@ namespace Spektr
             set { _receiveShadows = value; }
         }
 
+        public void DisposeInternalObjects()
+        {
+            ClearOwnMesh();
+            ClearOwnMaterials();
+        }
+
         #endregion
 
-        #region Private Properties
+        #region Private Variables
 
         MaterialPropertyBlock _materialOptions;
 
         #endregion
 
+        #region Private Mesh Object
+
+        Mesh _ownMesh;
+
+        void ClearOwnMesh()
+        {
+            if (_ownMesh != null) {
+                DestroyImmediate(_ownMesh);
+                _ownMesh = null;
+            }
+        }
+
+        Mesh GetScatterableMesh()
+        {
+            if (_mesh == null) return null;
+
+            // Use own mesh if it already exists.
+            if (_ownMesh) return _ownMesh;
+
+            if (ScatterTool.CheckScatterable(_mesh))
+            {
+                // Use the given mesh if it's scatterable.
+                return _mesh;
+            }
+            else
+            {
+                // Make scatterable clone and return it.
+                _ownMesh = ScatterTool.MakeScatterableClone(_mesh);
+                _ownMesh.hideFlags = HideFlags.DontSave;
+                return _ownMesh;
+            }
+        }
+
+        #endregion
+
+        #region Material Handling
+
+        Material[] _ownMaterials;
+
+        bool CheckAllMaterialsScatterable()
+        {
+            foreach (var m in _materials)
+                if (m != null && !ScatterTool.CheckScatterable(m)) return false;
+            return true;
+        }
+
+        void ClearOwnMaterials()
+        {
+            if (_ownMaterials != null) {
+                foreach (var m in _ownMaterials)
+                    if (m != null) DestroyImmediate(m);
+                _ownMaterials = null;
+            }
+        }
+
+        Material[] GetScatterableMaterials()
+        {
+            if (_materials == null || _materials.Length == 0) return null;
+
+            // Use own material list if it already exists.
+            if (_ownMaterials != null && _ownMaterials.Length > 0) return _ownMaterials;
+
+            if (CheckAllMaterialsScatterable())
+            {
+                // Use the given materials if all of them are scatterable.
+                return _materials;
+            }
+            else
+            {
+                // Make scatterable clone and return it.
+                _ownMaterials = new Material[_materials.Length];
+                for (var i = 0; i < _materials.Length; i++)
+                {
+                    _ownMaterials[i] = ScatterTool.MakeScatterableClone(_materials[i]);
+                    _ownMaterials[i].hideFlags = HideFlags.DontSave;
+                }
+                return _ownMaterials;
+            }
+        }
+
+        #endregion
+
         #region MonoBehaviour Functions
+
+        void OnDestroy()
+        {
+            ClearOwnMesh();
+            ClearOwnMaterials();
+        }
 
         void Update()
         {
-            if (_mesh == null) return;
+            var mesh = GetScatterableMesh();
+            var materials = GetScatterableMaterials();
+
+            if (mesh == null || materials == null) return;
 
             if (_materialOptions == null)
                 _materialOptions = new MaterialPropertyBlock();
 
-            var l2w = transform.localToWorldMatrix;
-            var w2l = transform.worldToLocalMatrix;
-
             if (_effector != null)
             {
-                var axis = w2l * _effector.transform.up;
-                var origin = Vector3.Dot(w2l * _effector.transform.position, axis);
+                var axis = transform.InverseTransformDirection(_effector.transform.up);
+                var origin = transform.InverseTransformPoint(_effector.transform.position);
 
-                var axis_origin = new Vector4(axis.x, axis.y, axis.z, origin);
+                var axis_origin = new Vector4(axis.x, axis.y, axis.z, Vector3.Dot(axis, origin));
                 _materialOptions.SetVector("_EffectorAxis", axis_origin);
                 _materialOptions.SetVector("_EffectorSize", _effector.size);
 
@@ -100,12 +209,13 @@ namespace Spektr
                 _materialOptions.SetFloat("_Inflation", _effector.inflation);
             }
 
-            var maxi = Mathf.Min(_mesh.subMeshCount, _materials.Length);
+            var maxi = Mathf.Min(mesh.subMeshCount, materials.Length);
+            var l2w = transform.localToWorldMatrix;
             for (var i = 0; i < maxi; i++)
             {
                 Graphics.DrawMesh(
-                    _mesh, l2w,
-                    _materials[i], 0, null, i,
+                    mesh, l2w,
+                    materials[i], 0, null, i,
                     _materialOptions, _castShadows, _receiveShadows);
             }
         }
