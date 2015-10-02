@@ -116,6 +116,9 @@ MonoBehaviour:
   _mesh: {fileID: 4300000, guid: c341a9ce657de4706b49faa82c5f18a8, type: 3}
   _materials:
   - {fileID: 2100000, guid: 427663f3dffde4cdfa5eb368c0201bba, type: 2}
+  _backFaceColor: {r: .416813433, g: .37312001, b: .492658496, a: 1}
+  _backFaceMetallic: 0
+  _backFaceSmoothness: .150000006
   _castShadows: 1
   _receiveShadows: 1
 --- !u!4 &46762482
@@ -157,22 +160,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02b812937b9c047ed9142d8c03b86d44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _size: {x: 1, y: 3, z: 1}
+  _size: {x: .300000012, y: 3, z: 1}
   _positionNoiseFrequency: 5
   _positionNoiseSpeed: 2
-  _positionNoiseAmplitude: .0500000007
+  _positionNoiseAmplitude: .100000001
   _rotationNoiseFrequency: 2
   _rotationNoiseSpeed: 1.20000005
-  _rotationNoiseAmplitude: 4
+  _rotationNoiseAmplitude: 18.1100006
   _inflation: 3.5
+  _shader: {fileID: 4800000, guid: bff51c853b97349e18f67ab63fba488e, type: 3}
 --- !u!4 &826355924
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 826355922}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: .0517770983, y: -.0623326972, z: .788638592, w: .60949409}
+  m_LocalPosition: {x: -.270000011, y: .239999995, z: -.0299999993}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
