@@ -30,17 +30,33 @@ namespace Spektr
     public class ScatterRendererEditor : Editor
     {
         SerializedProperty _effector;
+
         SerializedProperty _mesh;
         SerializedProperty _materials;
+
+        SerializedProperty _backFaceColor;
+        SerializedProperty _backFaceMetallic;
+        SerializedProperty _backFaceSmoothness;
+
         SerializedProperty _castShadows;
         SerializedProperty _receiveShadows;
 
+        static GUIContent _textColor = new GUIContent("Color");
+        static GUIContent _textMetallic = new GUIContent("Metallic");
+        static GUIContent _textSmoothness = new GUIContent("Smoothness");
+
         void OnEnable()
         {
-            _effector       = serializedObject.FindProperty("_effector");
-            _mesh           = serializedObject.FindProperty("_mesh");
-            _materials      = serializedObject.FindProperty("_materials");
-            _castShadows    = serializedObject.FindProperty("_castShadows");
+            _effector = serializedObject.FindProperty("_effector");
+
+            _mesh = serializedObject.FindProperty("_mesh");
+            _materials = serializedObject.FindProperty("_materials");
+
+            _backFaceColor = serializedObject.FindProperty("_backFaceColor");
+            _backFaceMetallic = serializedObject.FindProperty("_backFaceMetallic");
+            _backFaceSmoothness = serializedObject.FindProperty("_backFaceSmoothness");
+
+            _castShadows = serializedObject.FindProperty("_castShadows");
             _receiveShadows = serializedObject.FindProperty("_receiveShadows");
         }
 
@@ -52,11 +68,22 @@ namespace Spektr
 
             EditorGUILayout.PropertyField(_effector);
 
+            EditorGUILayout.Space();
+
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(_mesh);
             EditorGUILayout.PropertyField(_materials, true);
             if (EditorGUI.EndChangeCheck())
                 instance.DisposeInternalObjects();
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Back-face Material", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_backFaceColor, _textColor);
+            EditorGUILayout.PropertyField(_backFaceMetallic, _textMetallic);
+            EditorGUILayout.PropertyField(_backFaceSmoothness, _textSmoothness);
+
+            EditorGUILayout.Space();
 
             EditorGUILayout.PropertyField(_castShadows);
             EditorGUILayout.PropertyField(_receiveShadows);

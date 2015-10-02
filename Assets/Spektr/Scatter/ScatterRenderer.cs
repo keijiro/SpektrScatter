@@ -56,6 +56,30 @@ namespace Spektr
         }
 
         [SerializeField]
+        Color _backFaceColor = Color.gray;
+
+        public Color backFaceColor {
+            get { return _backFaceColor; }
+            set { _backFaceColor = value; }
+        }
+
+        [SerializeField, Range(0, 1)]
+        float _backFaceMetallic = 0;
+
+        public float backFaceMetallic {
+            get { return _backFaceMetallic; }
+            set { _backFaceMetallic = value; }
+        }
+
+        [SerializeField, Range(0, 1)]
+        float _backFaceSmoothness = 0.2f;
+
+        public float backFaceSmoothness {
+            get { return _backFaceSmoothness; }
+            set { _backFaceSmoothness = value; }
+        }
+
+        [SerializeField]
         ShadowCastingMode _castShadows;
 
         public ShadowCastingMode castShadows {
@@ -82,6 +106,15 @@ namespace Spektr
         #region Private Variables
 
         MaterialPropertyBlock _materialOptions;
+        ScatterEffector _foundEffector;
+
+        ScatterEffector FindEffector()
+        {
+            if (_effector != null) return _effector;
+            if (_foundEffector == null)
+                _foundEffector = FindObjectOfType<ScatterEffector>();
+            return _foundEffector;
+        }
 
         #endregion
 
@@ -188,31 +221,36 @@ namespace Spektr
             // model local space to world space matrix
             var l2w = transform.localToWorldMatrix;
 
-            if (_effector != null)
+            var effector = FindEffector();
+            if (effector != null)
             {
                 // world space to effector local space matrix
-                var w2e = _effector.transform.worldToLocalMatrix;
+                var w2e = effector.transform.worldToLocalMatrix;
 
                 // effector local space to normalized effector space matrix
-                var es = _effector.size;
+                var es = effector.size;
                 var e2n = Matrix4x4.Scale(new Vector3(1.0f / es.x, 1.0f / es.y, 1.0f / es.z));
 
                 _materialOptions.SetMatrix("_Effector", e2n * w2e * l2w);
 
                 _materialOptions.SetVector("_PNoise", new Vector3(
-                    _effector.positionNoiseFrequency,
-                    _effector.positionNoiseSpeed,
-                    _effector.positionNoiseAmplitude
+                    effector.positionNoiseFrequency,
+                    effector.positionNoiseSpeed,
+                    effector.positionNoiseAmplitude
                 ));
 
                 _materialOptions.SetVector("_RNoise", new Vector3(
-                    _effector.rotationNoiseFrequency,
-                    _effector.rotationNoiseSpeed,
-                    _effector.rotationNoiseAmplitude
+                    effector.rotationNoiseFrequency,
+                    effector.rotationNoiseSpeed,
+                    effector.rotationNoiseAmplitude
                 ));
 
-                _materialOptions.SetFloat("_Inflation", _effector.inflation);
+                _materialOptions.SetFloat("_Inflation", effector.inflation);
             }
+
+            _materialOptions.SetColor("_BackColor", _backFaceColor);
+            _materialOptions.SetFloat("_BackMetallic", _backFaceMetallic);
+            _materialOptions.SetFloat("_BackGlossiness", _backFaceSmoothness);
 
             var maxi = Mathf.Min(mesh.subMeshCount, materials.Length);
             for (var i = 0; i < maxi; i++)
