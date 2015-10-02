@@ -133,15 +133,14 @@ Shader "Spektr/Scatter/Standard"
         // position of centroid
         float3 center = v.texcoord1.xyz;
 
-        // transition parameter at centroid
-        float4 ppp = mul(_Effector, float4(center, 1));
-        float trans = 0.5 - ppp.y;
+        // effector space point
+        float3 esp = mul(_Effector, float4(center, 1)).xyz;
 
-        // unit step function
-        float unit = (trans > 0.0) * (abs(ppp.xz) < 0.5);
+        // unit step function (discards outside of effector)
+        float unit = (esp.y < 0.5) * all(abs(esp.xz) < 0.5);
 
         // decay parameter
-        float decay = saturate(1.0 - trans) * unit;
+        float decay = saturate(esp.y + 0.5) * unit;
 
         // displacement
         float3 pnoise = center * _PNoise.x + float3(18.4, 28.1, 21.4);

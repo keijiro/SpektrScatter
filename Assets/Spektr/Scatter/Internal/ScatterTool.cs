@@ -45,6 +45,7 @@ namespace Spektr
             var newMesh = new Mesh();
             newMesh.name = mesh.name + _suffix;
             newMesh.bounds = mesh.bounds;
+            newMesh.subMeshCount = mesh.subMeshCount;
             MakeScatterable(mesh, newMesh);
             return newMesh;
         }
