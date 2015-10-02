@@ -66,19 +66,24 @@ namespace Spektr
 
             serializedObject.Update();
 
+            EditorGUI.BeginChangeCheck();
+
             EditorGUILayout.PropertyField(_effector);
+
+            if (instance.effector == null)
+                EditorGUILayout.HelpBox("Please specify an effector to be linked.", MessageType.Error);
 
             EditorGUILayout.Space();
 
-            EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(_mesh);
             EditorGUILayout.PropertyField(_materials, true);
+
             if (EditorGUI.EndChangeCheck())
                 instance.DisposeInternalObjects();
 
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("Back-face Material", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Backface Properties", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(_backFaceColor, _textColor);
             EditorGUILayout.PropertyField(_backFaceMetallic, _textMetallic);
             EditorGUILayout.PropertyField(_backFaceSmoothness, _textSmoothness);

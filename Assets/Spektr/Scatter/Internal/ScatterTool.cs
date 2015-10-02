@@ -28,16 +28,10 @@ namespace Spektr
     public static class ScatterTool
     {
         const string _suffix = " (scatterable)";
-        const string _shaderName = "Spektr/Scatter/Standard";
 
         static public bool CheckScatterable(Mesh mesh)
         {
             return mesh.name.EndsWith(_suffix);
-        }
-
-        static public bool CheckScatterable(Material material)
-        {
-            return material.shader.name == _shaderName;
         }
 
         static public Mesh MakeScatterableClone(Mesh mesh)
@@ -50,22 +44,10 @@ namespace Spektr
             return newMesh;
         }
 
-        static public Material MakeScatterableClone(Material material)
-        {
-            var newMaterial = new Material(material);
-            newMaterial.shader = Shader.Find(_shaderName);
-            return newMaterial;
-        }
-
         static public void MakeScatterableInplace(Mesh mesh)
         {
             MakeScatterable(mesh, mesh);
             mesh.name += _suffix;
-        }
-
-        static public void MakeScatterableInplace(Material material)
-        {
-            material.shader = Shader.Find(_shaderName);
         }
 
         //

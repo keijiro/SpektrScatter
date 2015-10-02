@@ -31,12 +31,14 @@ namespace Spektr
     {
         #region Public Properties And Functions
 
+        // basic settings
+
         [SerializeField]
         ScatterEffector _effector;
 
         public ScatterEffector effector {
             get { return _effector; }
-            set { _effector = value; }
+            set { ClearOwnMaterials(); _effector = value; }
         }
 
         [SerializeField]
@@ -54,6 +56,8 @@ namespace Spektr
             get { return _ownMaterials != null ? _ownMaterials : _materials; }
             set { ClearOwnMaterials(); _materials = value; }
         }
+
+        // backface properties
 
         [SerializeField]
         Color _backFaceColor = Color.gray;
@@ -79,6 +83,8 @@ namespace Spektr
             set { _backFaceSmoothness = value; }
         }
 
+        // shdowing
+
         [SerializeField]
         ShadowCastingMode _castShadows;
 
@@ -95,6 +101,8 @@ namespace Spektr
             set { _receiveShadows = value; }
         }
 
+        // editor utility
+
         public void DisposeInternalObjects()
         {
             ClearOwnMesh();
@@ -106,15 +114,6 @@ namespace Spektr
         #region Private Variables
 
         MaterialPropertyBlock _materialOptions;
-        ScatterEffector _foundEffector;
-
-        ScatterEffector FindEffector()
-        {
-            if (_effector != null) return _effector;
-            if (_foundEffector == null)
-                _foundEffector = FindObjectOfType<ScatterEffector>();
-            return _foundEffector;
-        }
 
         #endregion
 
@@ -124,7 +123,8 @@ namespace Spektr
 
         void ClearOwnMesh()
         {
-            if (_ownMesh != null) {
+            if (_ownMesh != null)
+            {
                 DestroyImmediate(_ownMesh);
                 _ownMesh = null;
             }
@@ -157,16 +157,10 @@ namespace Spektr
 
         Material[] _ownMaterials;
 
-        bool CheckAllMaterialsScatterable()
-        {
-            foreach (var m in _materials)
-                if (m != null && !ScatterTool.CheckScatterable(m)) return false;
-            return true;
-        }
-
         void ClearOwnMaterials()
         {
-            if (_ownMaterials != null) {
+            if (_ownMaterials != null)
+            {
                 foreach (var m in _ownMaterials)
                     if (m != null) DestroyImmediate(m);
                 _ownMaterials = null;
@@ -175,27 +169,23 @@ namespace Spektr
 
         Material[] GetScatterableMaterials()
         {
-            if (_materials == null || _materials.Length == 0) return null;
+            if (_materials == null || _materials.Length == 0 || _effector == null) return null;
 
             // Use own material list if it already exists.
             if (_ownMaterials != null && _ownMaterials.Length > 0) return _ownMaterials;
 
-            if (CheckAllMaterialsScatterable())
+            // Make scatterable clone and return it.
+            _ownMaterials = new Material[_materials.Length];
+            for (var i = 0; i < _materials.Length; i++)
             {
-                // Use the given materials if all of them are scatterable.
-                return _materials;
-            }
-            else
-            {
-                // Make scatterable clone and return it.
-                _ownMaterials = new Material[_materials.Length];
-                for (var i = 0; i < _materials.Length; i++)
+                if (_materials[i] != null)
                 {
-                    _ownMaterials[i] = ScatterTool.MakeScatterableClone(_materials[i]);
+                    _ownMaterials[i] = new Material(_materials[i]);
+                    _ownMaterials[i].shader = _effector.shader;
                     _ownMaterials[i].hideFlags = HideFlags.DontSave;
                 }
-                return _ownMaterials;
             }
+            return _ownMaterials;
         }
 
         #endregion
@@ -213,51 +203,23 @@ namespace Spektr
             var mesh = GetScatterableMesh();
             var materials = GetScatterableMaterials();
 
-            if (mesh == null || materials == null) return;
+            if (mesh == null || materials == null || _effector == null) return;
 
             if (_materialOptions == null)
                 _materialOptions = new MaterialPropertyBlock();
-
-            // model local space to world space matrix
-            var l2w = transform.localToWorldMatrix;
-
-            var effector = FindEffector();
-            if (effector != null)
-            {
-                // world space to effector local space matrix
-                var w2e = effector.transform.worldToLocalMatrix;
-
-                // effector local space to normalized effector space matrix
-                var es = effector.size;
-                var e2n = Matrix4x4.Scale(new Vector3(1.0f / es.x, 1.0f / es.y, 1.0f / es.z));
-
-                _materialOptions.SetMatrix("_Effector", e2n * w2e * l2w);
-
-                _materialOptions.SetVector("_PNoise", new Vector3(
-                    effector.positionNoiseFrequency,
-                    effector.positionNoiseSpeed,
-                    effector.positionNoiseAmplitude
-                ));
-
-                _materialOptions.SetVector("_RNoise", new Vector3(
-                    effector.rotationNoiseFrequency,
-                    effector.rotationNoiseSpeed,
-                    effector.rotationNoiseAmplitude
-                ));
-
-                _materialOptions.SetFloat("_Inflation", effector.inflation);
-            }
 
             _materialOptions.SetColor("_BackColor", _backFaceColor);
             _materialOptions.SetFloat("_BackMetallic", _backFaceMetallic);
             _materialOptions.SetFloat("_BackGlossiness", _backFaceSmoothness);
 
+            _effector.SetPropertyBlock(_materialOptions, transform);
+
             var maxi = Mathf.Min(mesh.subMeshCount, materials.Length);
+            var l2w = transform.localToWorldMatrix;
             for (var i = 0; i < maxi; i++)
             {
                 Graphics.DrawMesh(
-                    mesh, l2w,
-                    materials[i], 0, null, i,
+                    mesh, l2w, materials[i], 0, null, i,
                     _materialOptions, _castShadows, _receiveShadows);
             }
         }

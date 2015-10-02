@@ -105,6 +105,51 @@ namespace Spektr
 
         #endregion
 
+        #region Private Resources
+
+        [SerializeField]
+        Shader _shader;
+
+        public Shader shader {
+            get { return _shader; }
+        }
+
+        #endregion
+
+        #region Public Functions
+
+        public void SetPropertyBlock(MaterialPropertyBlock block,
+                                     Transform modelTransform)
+        {
+            // model local space to world space matrix
+            var l2w = modelTransform.localToWorldMatrix;
+
+            // world space to effector local space matrix
+            var w2e = transform.worldToLocalMatrix;
+
+            // effector local space to normalized effector space matrix
+            var invs = new Vector3(1.0f / _size.x, 1.0f / _size.y, 1.0f / _size.z);
+            var e2n = Matrix4x4.Scale(invs);
+
+            block.SetMatrix("_Effector", e2n * w2e * l2w);
+
+            block.SetVector("_PNoise", new Vector3(
+                _positionNoiseFrequency,
+                _positionNoiseSpeed,
+                _positionNoiseAmplitude
+            ));
+
+            block.SetVector("_RNoise", new Vector3(
+                _rotationNoiseFrequency,
+                _rotationNoiseSpeed,
+                _rotationNoiseAmplitude
+            ));
+
+            block.SetFloat("_Inflation", _inflation);
+        }
+
+        #endregion
+
         #region MonoBehaviour Functions
 
         void OnDrawGizmos()
