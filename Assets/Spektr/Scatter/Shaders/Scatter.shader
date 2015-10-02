@@ -69,9 +69,7 @@ Shader "Spektr/Scatter/Standard"
     half _BackGlossiness;
     half _BackMetallic;
 
-    float4 _EffectorAxis;
-    float3 _EffectorSize;
-
+    float4x4 _Effector;
     float3 _PNoise;
     float3 _RNoise;
     float _Inflation;
@@ -129,34 +127,35 @@ Shader "Spektr/Scatter/Standard"
     {
         UNITY_INITIALIZE_OUTPUT(Input, data);
 
+        float3 right = normalize(_Effector[0].xyz);
+        float3 up = normalize(_Effector[1].xyz);
+
         // position of centroid
         float3 center = v.texcoord1.xyz;
 
         // transition parameter at centroid
-        float trans = _EffectorAxis.w - dot(center, _EffectorAxis.xyz);
-        trans = trans / _EffectorSize.y + 0.5;
+        float4 ppp = mul(_Effector, float4(center, 1));
+        float trans = 0.5 - ppp.y;
 
         // unit step function
-        float unit = trans > 0.0;
+        float unit = (trans > 0.0) * (abs(ppp.xz) < 0.5);
 
         // decay parameter
         float decay = saturate(1.0 - trans) * unit;
 
         // displacement
         float3 pnoise = center * _PNoise.x + float3(18.4, 28.1, 21.4);
-        pnoise += _EffectorAxis.xyz * _PNoise.y * _Time.y;
+        pnoise += up * _PNoise.y * _Time.y;
 
         float3 displace = random_point_on_sphere(center.xy);
         displace *= cnoise(pnoise) * _PNoise.z * decay;
 
         // rotation
         float3 rnoise = center * _RNoise.x + float3(23.1, 38.4, 15.3);
-        rnoise += _EffectorAxis.xyz * _RNoise.y * _Time.y;
+        rnoise += up * _RNoise.y * _Time.y;
 
-        float3 raxis = normalize(cross(_EffectorAxis.xyz, center));
         float rangle = cnoise(rnoise) * _RNoise.z * decay;
-
-        float4 rotation = rotation_angle_axis(rangle, raxis);
+        float4 rotation = rotation_angle_axis(rangle, right);
 
         // scaling
         float scale = 1.0 + lerp(-1, _Inflation - 1, decay) * unit;

@@ -185,14 +185,19 @@ namespace Spektr
             if (_materialOptions == null)
                 _materialOptions = new MaterialPropertyBlock();
 
+            // model local space to world space matrix
+            var l2w = transform.localToWorldMatrix;
+
             if (_effector != null)
             {
-                var axis = transform.InverseTransformDirection(_effector.transform.up);
-                var origin = transform.InverseTransformPoint(_effector.transform.position);
+                // world space to effector local space matrix
+                var w2e = _effector.transform.worldToLocalMatrix;
 
-                var axis_origin = new Vector4(axis.x, axis.y, axis.z, Vector3.Dot(axis, origin));
-                _materialOptions.SetVector("_EffectorAxis", axis_origin);
-                _materialOptions.SetVector("_EffectorSize", _effector.size);
+                // effector local space to normalized effector space matrix
+                var es = _effector.size;
+                var e2n = Matrix4x4.Scale(new Vector3(1.0f / es.x, 1.0f / es.y, 1.0f / es.z));
+
+                _materialOptions.SetMatrix("_Effector", e2n * w2e * l2w);
 
                 _materialOptions.SetVector("_PNoise", new Vector3(
                     _effector.positionNoiseFrequency,
@@ -210,7 +215,6 @@ namespace Spektr
             }
 
             var maxi = Mathf.Min(mesh.subMeshCount, materials.Length);
-            var l2w = transform.localToWorldMatrix;
             for (var i = 0; i < maxi; i++)
             {
                 Graphics.DrawMesh(
