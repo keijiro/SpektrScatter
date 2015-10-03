@@ -160,23 +160,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02b812937b9c047ed9142d8c03b86d44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _size: {x: .300000012, y: 3, z: 1}
+  _effectType: 0
+  _effectorSize: {x: 1, y: 1, z: 1}
+  _transitionSteepness: 1
+  _motionVector: {x: 0, y: 0, z: 1}
+  _directionSpread: .200000003
+  _speedRandomness: .5
+  _turbulenceFrequency: 1
+  _turbulenceAmplitude: 0
+  _positionNoiseAmplitude: .0500000007
   _positionNoiseFrequency: 5
   _positionNoiseSpeed: 2
-  _positionNoiseAmplitude: .100000001
+  _rotationAngle: 600
+  _rotationRandomness: .200000003
+  _rotationNoiseAmplitude: 4
   _rotationNoiseFrequency: 2
   _rotationNoiseSpeed: 1.20000005
-  _rotationNoiseAmplitude: 18.1100006
-  _inflation: 3.5
-  _shader: {fileID: 4800000, guid: bff51c853b97349e18f67ab63fba488e, type: 3}
+  _initialEmission: {r: 1, g: 1, b: 1, a: 1}
+  _emissionTransitionSteepness: 8
+  _initialScale: 3.5
+  _scaleTransitionSteepness: 1
+  _destructionShader: {fileID: 4800000, guid: bff51c853b97349e18f67ab63fba488e, type: 3}
+  _disintegrationShader: {fileID: 4800000, guid: d96007d3c4d154633bdb3062c0aecd5d,
+    type: 3}
 --- !u!4 &826355924
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 826355922}
-  m_LocalRotation: {x: .0517770983, y: -.0623326972, z: .788638592, w: .60949409}
-  m_LocalPosition: {x: -.270000011, y: .239999995, z: -.0299999993}
+  m_LocalRotation: {x: 0, y: -.707106829, z: 0, w: .707106709}
+  m_LocalPosition: {x: 0, y: .600000024, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
