@@ -1,11 +1,14 @@
 fileFormatVersion: 2
 guid: 02b812937b9c047ed9142d8c03b86d44
-timeCreated: 1443769387
+timeCreated: 1443778864
 licenseType: Pro
 MonoImporter:
   serializedVersion: 2
   defaultReferences:
-  - _shader: {fileID: 4800000, guid: bff51c853b97349e18f67ab63fba488e, type: 3}
+  - _destructionShader: {fileID: 4800000, guid: bff51c853b97349e18f67ab63fba488e,
+      type: 3}
+  - _disintegrationShader: {fileID: 4800000, guid: d96007d3c4d154633bdb3062c0aecd5d,
+      type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
